@@ -1,0 +1,1667 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Кликер | Викторина | Бонусы | Экономика</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            user-select: none;
+        }
+
+        body {
+            background-color: #000000;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-family: 'Courier New', 'Monaco', 'Fira Code', monospace;
+            padding: 1rem;
+        }
+
+        .game-container {
+            max-width: 750px;
+            width: 100%;
+            background: #050505;
+            border-radius: 2rem;
+            padding: 1rem 1.2rem 1.5rem;
+            box-shadow: 0 0 0 1px #0a2a3a, 0 20px 35px -12px rgba(0, 0, 0, 0.8);
+            border: 1px solid #0a2f3a;
+        }
+
+        .top-stats {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.6rem;
+            margin-bottom: 1rem;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .energy-bar-container {
+            background: #0a0a0a;
+            border-radius: 1.2rem;
+            padding: 0.2rem 0.5rem;
+            border: 1px solid #2288bb;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex: 2;
+            min-width: 140px;
+            position: relative;
+        }
+        .energy-text {
+            font-size: 0.75rem;
+            font-weight: bold;
+            color: #66ccff;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        .energy-bar-bg {
+            flex: 1;
+            height: 8px;
+            background: #1a1a1a;
+            border-radius: 1rem;
+            overflow: hidden;
+        }
+        .energy-bar-fill {
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, #44aaff, #88ccff);
+            border-radius: 1rem;
+            transition: width 0.2s ease;
+        }
+        .bonus-indicator {
+            font-size: 0.65rem;
+            background: #115588;
+            border-radius: 1rem;
+            padding: 0 0.4rem;
+            color: #eef5ff;
+            white-space: nowrap;
+        }
+        .compact-coins, .compact-rubles, .time-display {
+            background: #0a0a0a;
+            border-radius: 1.2rem;
+            padding: 0.2rem 0.7rem;
+            border: 1px solid #2288bb;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 0.75rem;
+            font-weight: bold;
+            color: #ffcc88;
+        }
+        .coins-value, .rubles-value {
+            font-weight: 800;
+            color: #ffdd99;
+            font-size: 0.9rem;
+        }
+        .time-display {
+            color: #88ccff;
+            gap: 4px;
+        }
+
+        .tabs {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.4rem;
+            margin-bottom: 1.5rem;
+            background: #0a0a0a;
+            padding: 0.3rem;
+            border-radius: 2.5rem;
+            border: 1px solid #2288bb;
+        }
+        .tab-btn {
+            flex: 1;
+            background: #111111;
+            border: none;
+            padding: 0.5rem 0;
+            border-radius: 2rem;
+            font-weight: 700;
+            font-size: 0.8rem;
+            color: #88ccff;
+            cursor: pointer;
+            transition: 0.1s;
+            font-family: 'Courier New', monospace;
+        }
+        .tab-btn.active {
+            background: #2277aa;
+            color: #eef5ff;
+            box-shadow: 0 0 8px #44aaff;
+        }
+        .tab-content {
+            display: none;
+            animation: fade 0.2s ease;
+        }
+        .tab-content.active-tab {
+            display: block;
+        }
+        @keyframes fade {
+            from { opacity: 0; transform: translateY(4px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .clicker-image {
+            background: transparent;
+            margin: 0 auto 0.8rem;
+            cursor: pointer;
+            transition: transform 0.08s linear;
+            max-width: 260px;
+            width: 100%;
+            border-radius: 1.5rem;
+            display: block;
+        }
+        .clicker-image:active {
+            transform: scale(0.96);
+        }
+        .clicker-image img {
+            width: 100%;
+            height: auto;
+            display: block;
+            border-radius: 1.5rem;
+            box-shadow: 0 0 0 2px #2288bb, 0 10px 20px rgba(0, 0, 0, 0.4);
+        }
+
+        .counter-panel {
+            background: #0a0a0a;
+            border-radius: 1.8rem;
+            padding: 0.4rem 0.8rem;
+            margin: 0.8rem auto 1rem;
+            border: 1px solid #2288bb;
+            width: fit-content;
+            min-width: 140px;
+            text-align: center;
+        }
+        .counter-label {
+            font-size: 0.6rem;
+            font-weight: 600;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            color: #88ccff;
+        }
+        .counter-value {
+            font-size: 1.8rem;
+            font-weight: 800;
+            color: #bbddff;
+            line-height: 1;
+            text-shadow: 0 0 4px #2288bb;
+        }
+
+        .auto-container {
+            margin-top: 1rem;
+            display: flex;
+            justify-content: center;
+            gap: 0.8rem;
+            align-items: center;
+        }
+        .auto-toggle {
+            background: #111111;
+            border: 1px solid #2288bb;
+            border-radius: 2rem;
+            padding: 0.3rem 1rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            transition: 0.1s;
+        }
+        .auto-toggle.active {
+            background: #115588;
+            border-color: #66ccff;
+            box-shadow: 0 0 8px #44aaff;
+        }
+        .auto-label {
+            font-size: 0.7rem;
+            font-weight: bold;
+            color: #88ccff;
+        }
+        .auto-status {
+            font-size: 0.7rem;
+            font-weight: bold;
+            background: #0a0a0a;
+            padding: 0.2rem 0.7rem;
+            border-radius: 2rem;
+            border: 1px solid #2288bb;
+            color: #88ccff;
+        }
+        .auto-status.active {
+            background: #115588;
+            color: #eef5ff;
+        }
+
+        .shop-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+        .shop-card {
+            background: #0a0a0a;
+            border-radius: 1.5rem;
+            padding: 1rem;
+            border: 1px solid #2288bb;
+            text-align: center;
+            cursor: pointer;
+            transition: transform 0.1s;
+        }
+        .shop-card:hover {
+            transform: translateY(-3px);
+            border-color: #44aaff;
+            box-shadow: 0 0 10px rgba(68, 170, 255, 0.3);
+        }
+        .shop-image {
+            width: 100%;
+            max-width: 180px;
+            border-radius: 1rem;
+            margin: 0 auto 0.5rem;
+            display: block;
+        }
+        .shop-title {
+            font-weight: bold;
+            color: #ffcc88;
+            font-size: 1rem;
+            margin-top: 0.3rem;
+        }
+        .shop-sub {
+            font-size: 0.7rem;
+            color: #88ccff;
+            margin-top: 5px;
+        }
+
+        .profile-card {
+            background: #0a0a0a;
+            border-radius: 1.8rem;
+            padding: 1.2rem;
+            border: 1px solid #2288bb;
+        }
+        .profile-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+        .profile-label {
+            font-weight: 600;
+            color: #88ccff;
+            font-size: 0.9rem;
+        }
+        .profile-value {
+            font-weight: 800;
+            color: #bbddff;
+            font-size: 1.2rem;
+        }
+        .edit-input {
+            background: #111111;
+            border: 1px solid #2288bb;
+            border-radius: 2rem;
+            padding: 0.4rem 1rem;
+            color: #eef5ff;
+            width: 180px;
+            outline: none;
+        }
+        .save-name-btn {
+            background: #2277aa;
+            border: none;
+            padding: 0.4rem 1rem;
+            border-radius: 2rem;
+            font-weight: bold;
+            color: #eef5ff;
+            cursor: pointer;
+        }
+
+        .exchange-section, .coin-exchange {
+            margin-top: 1rem;
+            padding-top: 1rem;
+            border-top: 1px solid #2288bb;
+            text-align: center;
+        }
+        .exchange-note {
+            font-size: 0.7rem;
+            color: #ffffff;
+            font-weight: bold;
+            margin-top: 0.5rem;
+        }
+        .exchange-input-group {
+            display: flex;
+            gap: 8px;
+            margin: 10px 0;
+            align-items: center;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        .exchange-input {
+            background: #111111;
+            border: 1px solid #2288bb;
+            border-radius: 2rem;
+            padding: 0.3rem 0.8rem;
+            color: #eef5ff;
+            width: 130px;
+            text-align: center;
+            font-family: monospace;
+        }
+        .exchange-btn {
+            background: #115588;
+            border: none;
+            padding: 0.4rem 1rem;
+            border-radius: 2rem;
+            font-weight: bold;
+            color: #eef5ff;
+            cursor: pointer;
+        }
+        .coin-exchange .title {
+            font-weight: bold;
+            color: #88ccff;
+            font-size: 0.9rem;
+            text-align: center;
+            margin-bottom: 6px;
+        }
+
+        /* Блок подписки на Telegram */
+        .telegram-bonus {
+            background: #0f1a1f;
+            border-radius: 1.2rem;
+            padding: 0.6rem;
+            margin: 1rem 0;
+            text-align: center;
+            border: 1px solid #44aaff;
+        }
+        .telegram-bonus .title {
+            font-weight: bold;
+            color: #ffcc88;
+            font-size: 0.8rem;
+        }
+        .telegram-link {
+            color: #88ccff;
+            font-size: 0.7rem;
+            word-break: break-all;
+            margin: 5px 0;
+        }
+        .telegram-btn {
+            background: linear-gradient(95deg, #1a5a7a, #0e3a55);
+            border: none;
+            padding: 5px 12px;
+            border-radius: 2rem;
+            font-weight: bold;
+            color: white;
+            cursor: pointer;
+            font-size: 0.8rem;
+            margin-top: 6px;
+        }
+        .telegram-status {
+            font-size: 0.65rem;
+            color: #88ccff;
+            margin-top: 5px;
+        }
+
+        .bonus-section {
+            background: #0f1a1f;
+            border-radius: 1.2rem;
+            padding: 0.6rem;
+            margin: 1rem 0;
+            text-align: center;
+            border: 1px solid #44aaff;
+        }
+        .bonus-title {
+            font-weight: bold;
+            color: #ffcc88;
+            font-size: 0.8rem;
+        }
+        .bonus-amount {
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: #ffdd99;
+        }
+        .bonus-btn {
+            background: linear-gradient(95deg, #1a5a7a, #0e3a55);
+            border: none;
+            padding: 5px 12px;
+            border-radius: 2rem;
+            font-weight: bold;
+            color: white;
+            cursor: pointer;
+            font-size: 0.8rem;
+            margin-top: 4px;
+        }
+        .bonus-timer {
+            font-size: 0.65rem;
+            color: #88ccff;
+            margin-top: 4px;
+        }
+
+        .reset-progress-btn {
+            background: #6a1a1a;
+            border: 1px solid #ff4444;
+            color: #ffaa88;
+            width: 100%;
+            padding: 10px;
+            border-radius: 3rem;
+            font-weight: bold;
+            margin-top: 1rem;
+            cursor: pointer;
+        }
+
+        .achievements-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            margin-top: 0.5rem;
+        }
+        .achievement-card {
+            background: #111111;
+            border-radius: 1rem;
+            padding: 0.5rem 1rem;
+            border-left: 4px solid #44aaff;
+        }
+        .achievement-title {
+            font-weight: bold;
+            color: #bbddff;
+            font-size: 0.85rem;
+        }
+        .achievement-progress {
+            font-size: 0.7rem;
+            color: #88ccff;
+            margin-top: 2px;
+        }
+        .achievement-reward {
+            font-size: 0.7rem;
+            color: #ffcc88;
+            margin-top: 2px;
+        }
+        .achievement-status {
+            margin-top: 4px;
+            font-size: 0.7rem;
+            font-weight: bold;
+        }
+        .status-completed { color: #88ff88; }
+        .status-not { color: #777777; }
+
+        .quest-card {
+            background: #0a0a0a;
+            border-radius: 1.5rem;
+            padding: 1rem;
+            border: 1px solid #2288bb;
+            text-align: center;
+            cursor: pointer;
+            transition: transform 0.1s;
+        }
+        .quest-card:hover {
+            transform: translateY(-3px);
+            border-color: #44aaff;
+            box-shadow: 0 0 10px rgba(68, 170, 255, 0.3);
+        }
+        .quest-image {
+            width: 100%;
+            max-width: 200px;
+            border-radius: 1rem;
+            margin: 0 auto 0.5rem;
+            display: block;
+        }
+        .quest-title {
+            font-weight: bold;
+            color: #ffcc88;
+            font-size: 1rem;
+            margin-top: 0.3rem;
+        }
+        .quest-status {
+            font-size: 0.7rem;
+            font-weight: bold;
+            margin-top: 6px;
+        }
+        .status-completed-quest { color: #88ff88; }
+        .status-not-quest { color: #777777; }
+        .status-failed-quest { color: #ff8866; }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.9);
+            z-index: 2000;
+            justify-content: center;
+            align-items: center;
+        }
+        .modal.active {
+            display: flex;
+        }
+        .modal-content {
+            background: linear-gradient(145deg, #0a2a3a, #021218);
+            border-radius: 1.5rem;
+            padding: 1rem;
+            max-width: 450px;
+            width: 90%;
+            border: 1px solid #44aaff;
+            box-shadow: 0 0 20px rgba(68,170,255,0.5);
+            text-align: center;
+            color: #eef5ff;
+        }
+        .modal-content h3 {
+            color: #88ccff;
+            margin-bottom: 0.8rem;
+            font-size: 1.2rem;
+            letter-spacing: 1px;
+        }
+        .quest-item {
+            background: #111111;
+            border-radius: 1rem;
+            padding: 0.7rem;
+            margin-bottom: 0.8rem;
+            text-align: left;
+        }
+        .quest-question {
+            font-weight: bold;
+            color: #88ccff;
+            margin-bottom: 6px;
+        }
+        .quest-options {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 5px;
+        }
+        .quest-option {
+            background: #1a3a4a;
+            border-radius: 2rem;
+            padding: 4px 12px;
+            cursor: pointer;
+            font-size: 0.75rem;
+            transition: 0.05s;
+        }
+        .quest-option.selected {
+            background: #2a6a9a;
+            box-shadow: 0 0 5px #44aaff;
+        }
+        .quest-option:active {
+            transform: scale(0.97);
+        }
+        .quiz-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        .quiz-btn {
+            background: #1a5a7a;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 2rem;
+            font-weight: bold;
+            color: white;
+            cursor: pointer;
+            flex: 1;
+        }
+        .quiz-btn:active {
+            transform: scale(0.97);
+        }
+        .close-modal {
+            margin-top: 0.8rem;
+            background: #1a3a4a;
+            border: 1px solid #44aaff;
+            padding: 0.3rem 0.8rem;
+            border-radius: 1.5rem;
+            color: #bbddff;
+            cursor: pointer;
+            width: 100%;
+            font-size: 0.75rem;
+        }
+        .upgrade-stats {
+            font-size: 0.65rem;
+            margin: 2px 0;
+            color: #ccddff;
+        }
+        .buy-button {
+            background: linear-gradient(95deg, #1a7a9a, #0e4a6a);
+            border: none;
+            padding: 0.3rem 0.8rem;
+            border-radius: 1.5rem;
+            font-weight: bold;
+            color: white;
+            cursor: pointer;
+            margin-top: 4px;
+            width: 100%;
+            transition: 0.1s;
+            font-family: monospace;
+            font-size: 0.75rem;
+        }
+
+        .mail-container {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            z-index: 2000;
+        }
+        .mail-icon {
+            background: #0a0a0a;
+            border-radius: 3rem;
+            padding: 12px;
+            cursor: pointer;
+            border: 1px solid #2288bb;
+            box-shadow: 0 0 10px rgba(34,136,187,0.3);
+            position: relative;
+        }
+        .mail-icon span { font-size: 1.6rem; }
+        .mail-badge {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            background: #ff3333;
+            color: white;
+            border-radius: 2rem;
+            min-width: 22px;
+            height: 22px;
+            font-size: 0.7rem;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .mail-modal {
+            display: none;
+            position: fixed;
+            bottom: 80px;
+            right: 20px;
+            width: 300px;
+            background: #0a0a0a;
+            border-radius: 1.5rem;
+            border: 1px solid #2288bb;
+            max-height: 450px;
+            overflow-y: auto;
+        }
+        .mail-modal.active { display: block; }
+        .mail-header {
+            padding: 10px;
+            border-bottom: 1px solid #2288bb;
+            font-weight: bold;
+            color: #88ccff;
+            text-align: center;
+            background: #0a0a0a;
+            position: sticky;
+            top: 0;
+        }
+        .mail-list { padding: 8px; }
+        .mail-item {
+            background: #111111;
+            border-radius: 1rem;
+            padding: 8px;
+            margin-bottom: 8px;
+            font-size: 0.7rem;
+            color: #ccddff;
+            border-left: 3px solid #44aaff;
+            cursor: pointer;
+        }
+        .mail-item.read { background: rgba(17, 17, 17, 0.5); opacity: 0.7; }
+        .mail-item.unread { background: #1a1a2a; font-weight: bold; border-left-color: #88ccff; }
+        .mail-time { font-size: 0.6rem; color: #88ccff; margin-top: 4px; }
+        .empty-mail { text-align: center; color: #88ccff; padding: 20px; }
+
+        .letter-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.95);
+            z-index: 2100;
+            justify-content: center;
+            align-items: center;
+        }
+        .letter-modal.active { display: flex; }
+        .letter-content {
+            background: #0a0a0a;
+            border-radius: 2rem;
+            padding: 1.5rem;
+            max-width: 380px;
+            width: 90%;
+            border: 2px solid #44aaff;
+            color: #eef5ff;
+        }
+        .letter-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+            border-bottom: 1px solid #2288bb;
+        }
+        .letter-header h3 { color: #ffcc88; }
+        .letter-close { font-size: 1.8rem; cursor: pointer; color: #88ccff; }
+        .letter-text { font-size: 0.9rem; line-height: 1.4; margin-bottom: 1rem; }
+        .letter-time { font-size: 0.7rem; color: #88ccff; text-align: right; }
+
+        .floating-plus {
+            position: fixed;
+            pointer-events: none;
+            font-size: 1.2rem;
+            font-weight: 800;
+            color: #88ccff;
+            text-shadow: 0 0 5px #2288bb;
+            z-index: 1000;
+            animation: floatUp 0.55s ease-out forwards;
+        }
+        @keyframes floatUp {
+            0% { opacity: 1; transform: translateY(0px) scale(0.8); }
+            100% { opacity: 0; transform: translateY(-50px) scale(1.2); }
+        }
+        @media (max-width: 700px) {
+            .tabs .tab-btn { font-size: 0.7rem; padding: 0.4rem 0; }
+            .top-stats { gap: 0.4rem; }
+        }
+    </style>
+</head>
+<body>
+<div class="game-container">
+    <div class="top-stats">
+        <div class="energy-bar-container">
+            <div class="energy-text">⚡ <span id="energyValue">100</span>%</div>
+            <div class="energy-bar-bg"><div class="energy-bar-fill" id="energyFill" style="width:100%"></div></div>
+            <div id="bonusIndicator" class="bonus-indicator" style="display: none;"></div>
+        </div>
+        <div class="compact-coins">🪙 <span class="coins-value" id="coinsAmount">0</span></div>
+        <div class="compact-rubles">💵 <span class="rubles-value" id="rublesAmount">0.00</span></div>
+        <div class="time-display">🕒 <span id="currentTime">--:--:--</span></div>
+    </div>
+
+    <div class="tabs">
+        <button class="tab-btn active" data-tab="tab-clicker">ИГРА</button>
+        <button class="tab-btn" data-tab="tab-shop">МАГАЗИН</button>
+        <button class="tab-btn" data-tab="tab-profile">КАБИНЕТ</button>
+        <button class="tab-btn" data-tab="tab-achievements">ДОСТИЖЕНИЯ</button>
+        <button class="tab-btn" data-tab="tab-quests">ЗАДАНИЯ</button>
+    </div>
+
+    <div id="tab-clicker" class="tab-content active-tab">
+        <div class="clicker-image" id="clickerImage">
+            <img src="https://lh3.googleusercontent.com/uln6iU3VHz0_jVwwpHJpCyfUGYziHi3mtHarfV6-8NQO2i0rNWkqcsU1h12qRsdmyQ=s280" alt="Кликер">
+        </div>
+        <div class="counter-panel">
+            <div class="counter-label">ДОСТУПНО КЛИКОВ</div>
+            <div class="counter-value" id="clickCounter">0</div>
+        </div>
+        <div class="auto-container">
+            <div class="auto-toggle" id="autoToggleBtn">
+                <span class="auto-label">АВТО</span>
+            </div>
+            <span class="auto-status" id="autoStatus">выкл</span>
+        </div>
+    </div>
+
+    <div id="tab-shop" class="tab-content">
+        <div class="shop-grid">
+            <div class="shop-card" id="shopCard">
+                <img class="shop-image" src="https://media.istockphoto.com/id/1847336948/tr/foto%C4%9Fraf/lightning-bolt-icon-with-bright-glowing-futuristic-blue-neon-lights-on-black-background.jpg?s=170667a&w=0&k=20&c=TTLiRAoMML8GV2d7lGuVbSHYSU7S-2o8s4Ka57WhvWc=" alt="Энергия">
+                <div class="shop-title">Энергия</div>
+                <div class="shop-sub">нажмите для покупки</div>
+            </div>
+            <div class="shop-card" id="upgradeShopCard">
+                <img class="shop-image" src="https://i.pinimg.com/236x/82/d3/f4/82d3f445c7f02e2161fe3b77711ce1d5.jpg?nii=t" alt="Клик">
+                <div class="shop-title">Клик</div>
+                <div class="shop-sub">нажмите для покупки</div>
+            </div>
+        </div>
+    </div>
+
+    <div id="tab-profile" class="tab-content">
+        <div class="profile-card">
+            <div class="profile-row"><span class="profile-label">Имя пользователя:</span><span class="profile-value" id="userNameDisplay">Гость</span></div>
+            <div class="profile-row"><input type="text" id="newNameInput" class="edit-input" placeholder="Новое имя"><button id="saveNameBtn" class="save-name-btn">Сохранить</button></div>
+            <div class="profile-row"><span class="profile-label">Ручные клики:</span><span class="profile-value" id="manualClicksStat">0</span></div>
+            <div class="profile-row"><span class="profile-label">Авто-клики:</span><span class="profile-value" id="autoClicksStat">0</span></div>
+            <div class="profile-row"><span class="profile-label">Всего кликов (за всё время):</span><span class="profile-value" id="totalClicksStat">0</span></div>
+            
+            <div class="exchange-section">
+                <div class="profile-label" style="text-align:center;">ОБМЕН КЛИКОВ НА МОНЕТЫ</div>
+                <div class="exchange-note">100 кликов = 1 монета 🪙</div>
+                <div class="exchange-input-group">
+                    <input type="number" id="exchangeAmountInput" class="exchange-input" placeholder="Количество кликов" min="100" step="100" value="100">
+                    <button id="exchangeCustomBtn" class="exchange-btn">Обменять</button>
+                </div>
+                <div class="exchange-note" id="exchangeMessage"></div>
+            </div>
+
+            <div class="coin-exchange">
+                <div class="title">ОБМЕН МОНЕТ НА РУБЛИ</div>
+                <div class="exchange-input-group">
+                    <input type="number" id="coinsToRubInput" class="exchange-input" placeholder="Количество монет" min="100" step="100" value="100">
+                    <button id="coinsToRubBtn" class="exchange-btn">Обменять</button>
+                </div>
+                <div class="exchange-note">100 монет = 1 рубль 💵</div>
+            </div>
+
+            <div class="bonus-section">
+                <div class="bonus-title">⭐ ЕЖЕДНЕВНЫЙ БОНУС (монеты)</div>
+                <div class="bonus-amount" id="bonusAmountPreview">до 100 монет</div>
+                <button class="bonus-btn" id="claimBonusBtn">ЗАБРАТЬ</button>
+                <div class="bonus-timer" id="bonusTimer"></div>
+            </div>
+
+            <!-- Бонус за подписку на Telegram -->
+            <div class="telegram-bonus">
+                <div class="title">📢 БОНУС ЗА ПОДПИСКУ НА TELEGRAM</div>
+                <div class="telegram-link">👉 <a href="https://t.me/klikomania" target="_blank" style="color:#88ccff;">t.me/klikomania</a></div>
+                <button class="telegram-btn" id="checkTelegramBtn">Проверить подписку (+1 💵)</button>
+                <div class="telegram-status" id="telegramBonusStatus">Не активирован</div>
+            </div>
+
+            <button class="reset-progress-btn" id="resetProgressBtn">❌ СТЕРЕТЬ ПРОГРЕСС ❌</button>
+        </div>
+    </div>
+
+    <div id="tab-achievements" class="tab-content">
+        <div class="achievements-grid" id="achievementsList"></div>
+    </div>
+
+    <!-- Вкладка ЗАДАНИЯ (викторина) -->
+    <div id="tab-quests" class="tab-content">
+        <div class="quest-card" id="quizCard">
+            <img class="quest-image" src="https://img.pikbest.com/ai/illus_our/20230526/366b3889e30558bad4357a194cd0525f.jpg" alt="Викторина" onerror="this.src='https://cdn-icons-png.flaticon.com/512/189/189244.png'">
+            <div class="quest-title">Викторина</div>
+            <div class="quest-status" id="quizStatusText">не начато</div>
+        </div>
+    </div>
+
+    <!-- Модальное окно викторины -->
+    <div id="quizModal" class="modal">
+        <div class="modal-content">
+            <h3>📋 ВИКТОРИНА (5 вопросов)</h3>
+            <div id="quizQuestionsContainer"></div>
+            <div class="quiz-buttons">
+                <button class="quiz-btn" id="submitQuizBtn">ОТВЕТИТЬ</button>
+                <button class="quiz-btn" id="closeQuizModalBtn">ЗАКРЫТЬ</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="shopModal" class="modal">
+        <div class="modal-content">
+            <h3>⚡ МАГАЗИН ЭНЕРГИИ ⚡</h3>
+            <div class="modal-option">
+                <div class="option-title">Восстановить энергию</div>
+                <div class="option-desc">Полностью восстанавливает энергию до 100%</div>
+                <button class="buy-button" id="restoreEnergyBtn">1 монета 🪙</button>
+            </div>
+            <div class="modal-option">
+                <div class="option-title">Бесконечная энергия (1 час)</div>
+                <div class="option-desc">Энергия не тратится 1 час</div>
+                <button class="buy-button" id="unlimited1hBtn">50 монет 🪙</button>
+            </div>
+            <div class="modal-option">
+                <div class="option-title">Бесконечная энергия (24 часа)</div>
+                <div class="option-desc">Энергия не тратится 24 часа</div>
+                <button class="buy-button" id="unlimited24hBtn">300 монет 🪙</button>
+            </div>
+            <button class="close-modal" id="closeModalBtn">Закрыть</button>
+        </div>
+    </div>
+
+    <div id="upgradeModal" class="modal">
+        <div class="modal-content">
+            <h3>⚡ УСИЛЕНИЕ КЛИКА ⚡</h3>
+            <div class="modal-option">
+                <div class="option-title">Усиление клика x2</div>
+                <div class="option-desc">Увеличивает силу ручного клика в 2 раза</div>
+                <div class="upgrade-stats" id="clickMultStat">Текущий множитель: x1</div>
+                <div class="upgrade-stats" id="clickCostStat">Стоимость: 10 💵</div>
+                <div class="upgrade-stats" id="clickLevelStat">Куплено: 0 / 5</div>
+                <button class="buy-button" id="buyClickUpgradeBtn">Купить</button>
+            </div>
+            <div class="modal-option">
+                <div class="option-title">x2 на клики в авто-режиме</div>
+                <div class="option-desc">Удваивает эффективность авто-кликера</div>
+                <div class="upgrade-stats" id="autoMultStat">Текущий множитель: x1</div>
+                <div class="upgrade-stats" id="autoCostStat">Стоимость: 50 💵</div>
+                <div class="upgrade-stats" id="autoLevelStat">Куплено: 0 / 5</div>
+                <button class="buy-button" id="buyAutoUpgradeBtn">Купить</button>
+            </div>
+            <button class="close-modal" id="closeUpgradeModalBtn">Закрыть</button>
+        </div>
+    </div>
+
+    <div class="mail-container"><div class="mail-icon" id="mailIcon"><span>✉️</span><span class="mail-badge" id="mailBadge" style="display: none;">0</span></div>
+        <div class="mail-modal" id="mailModal"><div class="mail-header">ПОЧТА</div><div class="mail-list" id="mailList"><div class="empty-mail">Нет писем</div></div></div>
+    </div>
+    <div id="letterModal" class="letter-modal"><div class="letter-content"><div class="letter-header"><h3>📬 ПИСЬМО</h3><span class="letter-close" id="letterCloseBtn">&times;</span></div><div class="letter-text" id="letterText"></div><div class="letter-time" id="letterTime"></div></div></div>
+</div>
+
+<script>
+    (function() {
+        // ОСНОВНЫЕ ПЕРЕМЕННЫЕ
+        let clickCount = 0;        // текущий баланс кликов (уменьшается при обмене)
+        let totalClicks = 0;       // общее количество кликов за всё время (только увеличивается)
+        let manualClicks = 0;
+        let autoClicks = 0;
+        let coins = 0;
+        let rubles = 0;
+        let userName = "Гость";
+        let autoClickerActive = false;
+        let autoInterval = null;
+        let currentEnergy = 100;
+        const MAX_ENERGY = 100;
+        let energyRegenInterval = null;
+        let infiniteEnergyUntil = 0;
+
+        let manualClickMult = 1;
+        let autoClickMult = 1;
+        let manualUpgradeLevel = 0;
+        let autoUpgradeLevel = 0;
+        let manualUpgradeCost = 10;
+        let autoUpgradeCost = 50;
+
+        let lastDailyBonus = 0;
+        let telegramBonusClaimed = false;
+
+        // Викторина
+        let quizState = { status: 'not_started', rewardGiven: false };
+        const QUIZ_REWARD = 5;
+        const questions = [
+            { text: "Сколько будет 2 + 2?", options: ["3", "4", "5", "6"], correct: 1 },
+            { text: "Какая планета называется 'красной планетой'?", options: ["Венера", "Марс", "Юпитер", "Сатурн"], correct: 1 },
+            { text: "Какой язык программирования используется для создания веб-страниц?", options: ["Python", "Java", "HTML", "C++"], correct: 2 },
+            { text: "Кто написал 'Войну и мир'?", options: ["Достоевский", "Толстой", "Чехов", "Пушкин"], correct: 1 },
+            { text: "Столица Франции?", options: ["Лондон", "Берлин", "Мадрид", "Париж"], correct: 3 }
+        ];
+        let selectedAnswers = [null, null, null, null, null];
+        let quizLocked = false;
+
+        const achievementsList = [
+            { id: 1, target: 100, reward: 1, completed: false, text: "100 кликов", rewardText: "1 монета" },
+            { id: 2, target: 500, reward: 5, completed: false, text: "500 кликов", rewardText: "5 монет" },
+            { id: 3, target: 1000, reward: 10, completed: false, text: "1.000 кликов", rewardText: "10 монет" },
+            { id: 4, target: 5000, reward: 50, completed: false, text: "5.000 кликов", rewardText: "50 монет" },
+            { id: 5, target: 10000, reward: 100, completed: false, text: "10.000 кликов", rewardText: "100 монет" },
+            { id: 6, target: 50000, reward: 500, completed: false, text: "50.000 кликов", rewardText: "500 монет" },
+            { id: 7, target: 100000, reward: 1000, completed: false, text: "100.000 кликов", rewardText: "1.000 монет" },
+            { id: 8, target: 500000, reward: 5000, completed: false, text: "500.000 кликов", rewardText: "5.000 монет" },
+            { id: 9, target: 1000000, reward: 10000, completed: false, text: "1.000.000 кликов", rewardText: "10.000 монет" }
+        ];
+
+        let letters = [], nextLetterId = 1, unreadCount = 0;
+
+        // DOM элементы
+        const energyValueSpan = document.getElementById('energyValue');
+        const energyFillDiv = document.getElementById('energyFill');
+        const coinsSpan = document.getElementById('coinsAmount');
+        const rublesSpan = document.getElementById('rublesAmount');
+        const counterSpan = document.getElementById('clickCounter');
+        const clickImage = document.getElementById('clickerImage');
+        const userNameDisplay = document.getElementById('userNameDisplay');
+        const manualClicksSpan = document.getElementById('manualClicksStat');
+        const autoClicksSpan = document.getElementById('autoClicksStat');
+        const totalClicksSpan = document.getElementById('totalClicksStat');
+        const newNameInput = document.getElementById('newNameInput');
+        const saveNameBtn = document.getElementById('saveNameBtn');
+        const autoToggleBtn = document.getElementById('autoToggleBtn');
+        const autoStatusSpan = document.getElementById('autoStatus');
+        const exchangeCustomBtn = document.getElementById('exchangeCustomBtn');
+        const exchangeAmountInput = document.getElementById('exchangeAmountInput');
+        const exchangeMessageSpan = document.getElementById('exchangeMessage');
+        const shopCard = document.getElementById('shopCard');
+        const closeModalBtn = document.getElementById('closeModalBtn');
+        const restoreEnergyBtn = document.getElementById('restoreEnergyBtn');
+        const unlimited1hBtn = document.getElementById('unlimited1hBtn');
+        const unlimited24hBtn = document.getElementById('unlimited24hBtn');
+        const modal = document.getElementById('shopModal');
+        const upgradeShopCard = document.getElementById('upgradeShopCard');
+        const upgradeModal = document.getElementById('upgradeModal');
+        const closeUpgradeModalBtn = document.getElementById('closeUpgradeModalBtn');
+        const buyClickUpgradeBtn = document.getElementById('buyClickUpgradeBtn');
+        const buyAutoUpgradeBtn = document.getElementById('buyAutoUpgradeBtn');
+        const clickMultStat = document.getElementById('clickMultStat');
+        const clickCostStat = document.getElementById('clickCostStat');
+        const clickLevelStat = document.getElementById('clickLevelStat');
+        const autoMultStat = document.getElementById('autoMultStat');
+        const autoCostStat = document.getElementById('autoCostStat');
+        const autoLevelStat = document.getElementById('autoLevelStat');
+        const mailIcon = document.getElementById('mailIcon');
+        const mailModal = document.getElementById('mailModal');
+        const mailBadge = document.getElementById('mailBadge');
+        const mailList = document.getElementById('mailList');
+        const letterModal = document.getElementById('letterModal');
+        const letterCloseBtn = document.getElementById('letterCloseBtn');
+        const letterText = document.getElementById('letterText');
+        const letterTime = document.getElementById('letterTime');
+        const achievementsContainer = document.getElementById('achievementsList');
+        const claimBonusBtn = document.getElementById('claimBonusBtn');
+        const bonusTimer = document.getElementById('bonusTimer');
+        const resetProgressBtn = document.getElementById('resetProgressBtn');
+        const coinsToRubBtn = document.getElementById('coinsToRubBtn');
+        const coinsToRubInput = document.getElementById('coinsToRubInput');
+        const bonusIndicator = document.getElementById('bonusIndicator');
+        const quizCard = document.getElementById('quizCard');
+        const quizModal = document.getElementById('quizModal');
+        const quizQuestionsContainer = document.getElementById('quizQuestionsContainer');
+        const submitQuizBtn = document.getElementById('submitQuizBtn');
+        const closeQuizModalBtn = document.getElementById('closeQuizModalBtn');
+        const quizStatusText = document.getElementById('quizStatusText');
+        const checkTelegramBtn = document.getElementById('checkTelegramBtn');
+        const telegramBonusStatus = document.getElementById('telegramBonusStatus');
+
+        // Вспомогательные функции
+        function updateClock() {
+            document.getElementById('currentTime').innerText = new Date().toLocaleTimeString('ru-RU', { hour:'2-digit', minute:'2-digit', second:'2-digit' });
+        }
+        setInterval(updateClock, 1000); updateClock();
+
+        function formatTimeRemaining(ms) {
+            const totalHours = Math.floor(ms / 3600000);
+            const totalMinutes = Math.floor((ms % 3600000) / 60000);
+            if (totalHours >= 24) return '24ч';
+            if (totalHours > 0) return `${totalHours}ч ${totalMinutes}мин`;
+            return `${totalMinutes}мин`;
+        }
+
+        function updateBonusIndicator() {
+            if (infiniteEnergyUntil > 0 && Date.now() < infiniteEnergyUntil) {
+                bonusIndicator.innerText = formatTimeRemaining(infiniteEnergyUntil - Date.now());
+                bonusIndicator.style.display = 'inline-block';
+            } else {
+                bonusIndicator.style.display = 'none';
+            }
+        }
+
+        function isInfiniteActive() {
+            if (infiniteEnergyUntil > 0 && Date.now() > infiniteEnergyUntil) {
+                infiniteEnergyUntil = 0;
+                saveGame();
+                updateUI();
+                return false;
+            }
+            return infiniteEnergyUntil > 0;
+        }
+
+        // --- Викторина ---
+        function renderQuiz() {
+            let html = '';
+            for (let i = 0; i < questions.length; i++) {
+                const q = questions[i];
+                let optionsHtml = '';
+                for (let j = 0; j < q.options.length; j++) {
+                    const isSelected = (selectedAnswers[i] === j);
+                    optionsHtml += `<div class="quest-option ${isSelected ? 'selected' : ''}" data-qidx="${i}" data-oidx="${j}">${q.options[j]}</div>`;
+                }
+                html += `<div class="quest-item"><div class="quest-question">${i+1}. ${q.text}</div><div class="quest-options">${optionsHtml}</div></div>`;
+            }
+            quizQuestionsContainer.innerHTML = html;
+            document.querySelectorAll('.quest-option').forEach(opt => {
+                opt.addEventListener('click', (e) => {
+                    if (quizLocked) return;
+                    const qidx = parseInt(opt.dataset.qidx);
+                    const oidx = parseInt(opt.dataset.oidx);
+                    selectedAnswers[qidx] = oidx;
+                    renderQuiz();
+                });
+            });
+        }
+
+        function updateQuizUIStatus() {
+            if (quizState.status === 'completed') {
+                quizStatusText.innerText = 'выполнено';
+                quizStatusText.className = 'quest-status status-completed-quest';
+            } else if (quizState.status === 'failed') {
+                quizStatusText.innerText = 'не выполнено';
+                quizStatusText.className = 'quest-status status-failed-quest';
+            } else {
+                quizStatusText.innerText = 'не начато';
+                quizStatusText.className = 'quest-status status-not-quest';
+            }
+        }
+
+        function loadQuizState() {
+            const saved = localStorage.getItem('quizState');
+            if (saved) {
+                try {
+                    const s = JSON.parse(saved);
+                    quizState = s;
+                    if (quizState.status === 'completed' || quizState.status === 'failed') quizLocked = true;
+                } catch(e) {}
+            }
+            updateQuizUIStatus();
+        }
+
+        function saveQuizState() {
+            localStorage.setItem('quizState', JSON.stringify(quizState));
+        }
+
+        function openQuizModal() {
+            if (quizLocked) { showMessage("Викторина уже пройдена!", true); return; }
+            selectedAnswers = [null, null, null, null, null];
+            renderQuiz();
+            quizModal.classList.add('active');
+        }
+
+        function closeQuizModal() { quizModal.classList.remove('active'); }
+
+        function submitQuiz() {
+            if (quizLocked) { showMessage("Викторина уже завершена!", true); return; }
+            for (let i = 0; i < selectedAnswers.length; i++) {
+                if (selectedAnswers[i] === null) { showMessage("Ответьте на все вопросы!", true); return; }
+            }
+            let allCorrect = true;
+            for (let i = 0; i < questions.length; i++) {
+                if (selectedAnswers[i] !== questions[i].correct) { allCorrect = false; break; }
+            }
+            if (allCorrect) {
+                quizState.status = 'completed';
+                quizState.rewardGiven = true;
+                rubles += QUIZ_REWARD;
+                addLetter(`Викторина пройдена! Вы получили ${QUIZ_REWARD} 💵 рублей.`);
+                showMessage(`Поздравляем! Вы ответили на все вопросы и получили ${QUIZ_REWARD} рублей!`, false);
+                quizLocked = true;
+                updateUI();
+                saveGame();
+            } else {
+                quizState.status = 'failed';
+                quizLocked = true;
+                addLetter(`Викторина пройдена неудачно. Один или несколько ответов неверны.`);
+                showMessage("Вы допустили ошибку. Викторина не засчитана.", true);
+                updateUI();
+                saveGame();
+            }
+            updateQuizUIStatus();
+            closeQuizModal();
+        }
+
+        // --- Бонус за Telegram ---
+        function checkTelegramBonus() {
+            if (telegramBonusClaimed) {
+                showMessage("Вы уже получили бонус за подписку!", true);
+                return;
+            }
+            if (confirm("Вы перешли по ссылке и подписались на сообщество? Нажмите ОК, чтобы получить 1 рубль.")) {
+                rubles += 1;
+                telegramBonusClaimed = true;
+                telegramBonusStatus.innerText = "Активирован ✅";
+                updateUI();
+                saveGame();
+                addLetter("Бонус за подписку на Telegram: +1 💵 рубль!");
+                showMessage("Спасибо за подписку! Вы получили 1 рубль.", false);
+            } else {
+                showMessage("Сначала подпишитесь на канал: https://t.me/klikomania", true);
+            }
+        }
+
+        // --- Достижения (используют totalClicks) ---
+        function renderAchievements() {
+            let html = '';
+            for (let ach of achievementsList) {
+                let progressText;
+                if (ach.completed) {
+                    progressText = "Выполнено!";
+                } else {
+                    let remaining = ach.target - totalClicks;
+                    if (remaining <= 0) {
+                        progressText = "Выполнено!";
+                    } else {
+                        progressText = `Осталось: ${remaining.toLocaleString('ru-RU')} кликов`;
+                    }
+                }
+                const statusClass = ach.completed ? 'status-completed' : 'status-not';
+                html += `<div class="achievement-card"><div class="achievement-title">${ach.text}</div><div class="achievement-progress">${progressText}</div><div class="achievement-reward">Награда: ${ach.rewardText}</div><div class="achievement-status ${statusClass}">${ach.completed ? 'Выполнено' : 'Не выполнено'}</div></div>`;
+            }
+            achievementsContainer.innerHTML = html;
+        }
+
+        function checkAchievements() {
+            let anyChanged = false;
+            for (let ach of achievementsList) {
+                if (!ach.completed && totalClicks >= ach.target) {
+                    ach.completed = true;
+                    anyChanged = true;
+                    coins += ach.reward;
+                    addLetter(`Достижение: ${ach.text} выполнено! Получено ${ach.rewardText} 🪙`);
+                    updateUI();
+                }
+            }
+            if (anyChanged) { renderAchievements(); saveGame(); }
+        }
+
+        // --- Энергия и клики ---
+        function updateEnergyUI() {
+            energyValueSpan.innerText = Math.floor(currentEnergy);
+            energyFillDiv.style.width = (currentEnergy/MAX_ENERGY*100)+"%";
+        }
+        function spendEnergy(amount, isAuto=false) {
+            if (isAuto) return true;
+            if (isInfiniteActive()) return true;
+            if (currentEnergy >= amount) { currentEnergy -= amount; updateEnergyUI(); saveGame(); return true; }
+            return false;
+        }
+        function restoreFullEnergy() { currentEnergy = MAX_ENERGY; updateEnergyUI(); saveGame(); }
+        function passiveRegen() {
+            if (!isInfiniteActive() && currentEnergy < MAX_ENERGY) {
+                let newE = Math.min(MAX_ENERGY, currentEnergy + 0.5);
+                if (newE !== currentEnergy) { currentEnergy = newE; updateEnergyUI(); saveGame(); }
+            }
+        }
+
+        function startRegen() {
+            if (energyRegenInterval) clearInterval(energyRegenInterval);
+            energyRegenInterval = setInterval(() => {
+                passiveRegen();
+                if (infiniteEnergyUntil > 0 && Date.now() > infiniteEnergyUntil) {
+                    infiniteEnergyUntil = 0;
+                    addLetter("Бесконечная энергия закончилась");
+                    updateUI();
+                    updateBonusIndicator();
+                }
+                updateBonusIndicator();
+            }, 2000);
+        }
+
+        function manualClick(event) {
+            if (spendEnergy(1, false)) {
+                let gain = 1 * manualClickMult;
+                clickCount += gain;
+                totalClicks += gain;
+                manualClicks += gain;
+                updateUI(); saveGame();
+                createFloatingEffect(event, false, gain);
+                if (navigator.vibrate) navigator.vibrate(20);
+                checkAchievements();
+            } else showMessage("Недостаточно энергии!", true);
+        }
+
+        function autoClickAction() {
+            if (spendEnergy(1, true)) {
+                let gain = 1 * autoClickMult;
+                clickCount += gain;
+                totalClicks += gain;
+                autoClicks += gain;
+                updateUI(); saveGame();
+                createFloatingEffect(null, true, gain);
+                checkAchievements();
+            }
+        }
+
+        function createFloatingEffect(event, isAuto, gain) {
+            let x, y;
+            if (event && !isAuto) {
+                if (event.touches) { x=event.touches[0].clientX; y=event.touches[0].clientY; }
+                else { x=event.clientX; y=event.clientY; }
+            }
+            if (!x || !y || isAuto) { const rect = clickImage.getBoundingClientRect(); x=rect.left+rect.width/2; y=rect.top+rect.height/2; }
+            const div=document.createElement('div');
+            div.innerText = isAuto ? `+${gain} (авто)` : `+${gain}`;
+            div.className='floating-plus';
+            div.style.left=`${x-20}px`;
+            div.style.top=`${y-20}px`;
+            document.body.appendChild(div);
+            setTimeout(()=>div.remove(),550);
+        }
+
+        // --- Автокликер ---
+        function startAutoClicker() { if(autoInterval) clearInterval(autoInterval); autoInterval = setInterval(()=>{ if(autoClickerActive) autoClickAction(); },1000); }
+        function stopAutoClicker() { if(autoInterval) clearInterval(autoInterval); autoInterval=null; }
+        function updateAutoUiState() {
+            if(autoClickerActive) {
+                autoToggleBtn.classList.add('active');
+                autoStatusSpan.innerText='вкл';
+                autoStatusSpan.classList.add('active');
+                startAutoClicker();
+            } else {
+                autoToggleBtn.classList.remove('active');
+                autoStatusSpan.innerText='выкл';
+                autoStatusSpan.classList.remove('active');
+                stopAutoClicker();
+            }
+        }
+        function toggleAutoClicker() { autoClickerActive=!autoClickerActive; saveGame(); updateAutoUiState(); }
+
+        // --- Обмен кликов (уменьшает ТОЛЬКО clickCount, не totalClicks) ---
+        function exchangeClicks(amount) {
+            if (amount < 100 || amount % 100 !== 0) { showMessage("Кратно 100 и не менее 100", true); return false; }
+            if (clickCount < amount) { showMessage("Недостаточно кликов", true); return false; }
+            const earnedCoins = amount / 100;
+            clickCount -= amount;
+            coins += earnedCoins;
+            updateUI(); saveGame();
+            addLetter(`Обмен: -${amount} кликов → +${earnedCoins} 🪙`);
+            exchangeMessageSpan.innerText = `+${earnedCoins} монет 🪙`;
+            setTimeout(()=>exchangeMessageSpan.innerText='',2000);
+            return true;
+        }
+        function handleExchange() {
+            let amount = parseInt(exchangeAmountInput.value,10);
+            if(isNaN(amount) || amount<=0) { showMessage("Введите число", true); return; }
+            exchangeClicks(amount);
+        }
+
+        // --- Обмен монет на рубли ---
+        function coinsToRubles() {
+            let amountCoins = parseInt(coinsToRubInput.value, 10);
+            if (isNaN(amountCoins) || amountCoins <= 0) { showMessage("Введите количество монет", true); return; }
+            if (amountCoins < 100) { showMessage("Минимум 100 монет для обмена", true); return; }
+            if (amountCoins % 100 !== 0) { showMessage("Количество монет должно быть кратно 100", true); return; }
+            if (coins < amountCoins) { showMessage("Недостаточно монет", true); return; }
+            let rubGain = amountCoins / 100;
+            coins -= amountCoins;
+            rubles += rubGain;
+            updateUI(); saveGame();
+            addLetter(`Обмен монет: -${amountCoins} 🪙 → +${rubGain.toFixed(2)} 💵`);
+            showMessage(`Обменяно ${amountCoins} монет на ${rubGain.toFixed(2)} руб.`, false);
+            coinsToRubInput.value = '';
+        }
+
+        // --- Магазины ---
+        function openModal() { modal.classList.add('active'); }
+        function closeModal() { modal.classList.remove('active'); }
+        function buyRestore() {
+            if (coins>=1) { coins--; restoreFullEnergy(); updateUI(); saveGame(); addLetter("Покупка: восстановление энергии (1 🪙)"); closeModal(); }
+            else showMessage("Не хватает монет", true);
+        }
+        function buyUnlimited(hours) {
+            const cost = hours===1 ? 50 : 300;
+            if (coins>=cost) {
+                coins-=cost;
+                const durationMs = hours*60*60*1000;
+                const now=Date.now();
+                infiniteEnergyUntil = infiniteEnergyUntil>now ? infiniteEnergyUntil+durationMs : now+durationMs;
+                updateUI(); saveGame();
+                addLetter(`Покупка: бесконечная энергия на ${hours} час(ов) за ${cost} 🪙`);
+                closeModal();
+                updateBonusIndicator();
+            } else showMessage("Не хватает монет", true);
+        }
+
+        function updateUpgradeUI() {
+            clickMultStat.innerText = `Текущий множитель: x${manualClickMult}`;
+            clickCostStat.innerText = `Стоимость: ${manualUpgradeCost} 💵`;
+            clickLevelStat.innerText = `Куплено: ${manualUpgradeLevel} / 5`;
+            autoMultStat.innerText = `Текущий множитель: x${autoClickMult}`;
+            autoCostStat.innerText = `Стоимость: ${autoUpgradeCost} 💵`;
+            autoLevelStat.innerText = `Куплено: ${autoUpgradeLevel} / 5`;
+        }
+
+        function buyManualClickUpgrade() {
+            if (manualUpgradeLevel >= 5) { showMessage("Максимальный уровень!", true); return; }
+            if (rubles >= manualUpgradeCost) {
+                rubles -= manualUpgradeCost;
+                manualUpgradeLevel++;
+                manualClickMult *= 2;
+                manualUpgradeCost *= 2;
+                updateUI(); saveGame();
+                addLetter(`Улучшение: Усиление клика x${manualClickMult} (ур. ${manualUpgradeLevel}) за ${manualUpgradeCost/2} 💵`);
+                showMessage("Усиление клика куплено!", false);
+                updateUpgradeUI();
+            } else showMessage("Недостаточно рублей!", true);
+        }
+
+        function buyAutoClickUpgrade() {
+            if (autoUpgradeLevel >= 5) { showMessage("Максимальный уровень!", true); return; }
+            if (rubles >= autoUpgradeCost) {
+                rubles -= autoUpgradeCost;
+                autoUpgradeLevel++;
+                autoClickMult *= 2;
+                autoUpgradeCost *= 2;
+                updateUI(); saveGame();
+                addLetter(`Улучшение: x2 на авто-клики x${autoClickMult} (ур. ${autoUpgradeLevel}) за ${autoUpgradeCost/2} 💵`);
+                showMessage("Усиление авто-клика куплено!", false);
+                updateUpgradeUI();
+            } else showMessage("Недостаточно рублей!", true);
+        }
+
+        function openUpgradeModal() { upgradeModal.classList.add('active'); }
+        function closeUpgradeModal() { upgradeModal.classList.remove('active'); }
+
+        // --- Профиль и бонусы ---
+        function changeUserName() {
+            const newName = newNameInput.value.trim();
+            if(!newName) { showMessage("Имя не пустое", true); return; }
+            userName = newName; updateUI(); saveGame(); newNameInput.value='';
+            addLetter(`Имя изменено на "${userName}"`);
+        }
+
+        function showMessage(msg, isErr) {
+            const div=document.createElement('div');
+            div.innerText=msg;
+            div.style.cssText=`position:fixed; bottom:25%; left:50%; transform:translateX(-50%); background:${isErr?'#0a2a3a':'#115588'}; padding:6px 16px; border-radius:2rem; color:#88ccff; font-size:0.8rem; border:1px solid #2288bb; z-index:1000;`;
+            document.body.appendChild(div);
+            setTimeout(()=>div.remove(),1500);
+        }
+
+        function updateBonusUI() {
+            const now = Date.now();
+            const dayMs = 86400000;
+            if (lastDailyBonus && (now - lastDailyBonus) < dayMs) {
+                const remaining = dayMs - (now - lastDailyBonus);
+                const hours = Math.floor(remaining / 3600000);
+                const minutes = Math.floor((remaining % 3600000) / 60000);
+                bonusTimer.innerText = `Следующий бонус через ${hours}ч ${minutes}м`;
+                claimBonusBtn.disabled = true;
+                claimBonusBtn.style.opacity = '0.6';
+            } else {
+                bonusTimer.innerText = 'Бонус доступен!';
+                claimBonusBtn.disabled = false;
+                claimBonusBtn.style.opacity = '1';
+            }
+        }
+
+        function claimDailyBonus() {
+            const now = Date.now();
+            const dayMs = 86400000;
+            if (lastDailyBonus && (now - lastDailyBonus) < dayMs) {
+                showMessage("Бонус уже получен сегодня!", true);
+                return;
+            }
+            const bonusAmount = Math.floor(Math.random() * 100) + 1;
+            coins += bonusAmount;
+            lastDailyBonus = now;
+            updateUI(); saveGame();
+            addLetter(`Ежедневный бонус: +${bonusAmount} 🪙 монет!`);
+            showMessage(`Вы получили ${bonusAmount} монет!`, false);
+            updateBonusUI();
+        }
+
+        function resetAllProgress() {
+            if (confirm("ВНИМАНИЕ! Это действие удалит ВСЕ ваши данные. Вы уверены?")) {
+                localStorage.clear();
+                location.reload();
+            }
+        }
+
+        // --- Почта ---
+        function addLetter(text) {
+            letters.unshift({ id: nextLetterId++, text: text, time: new Date(), read: false });
+            unreadCount++;
+            saveLetters(); updateMailUI();
+        }
+
+        function updateMailUI() {
+            mailBadge.style.display = unreadCount > 0 ? 'flex' : 'none';
+            if (unreadCount > 0) mailBadge.innerText = unreadCount;
+            if (letters.length === 0) { mailList.innerHTML = '<div class="empty-mail">Нет писем</div>'; return; }
+            let html = '';
+            for (let l of letters) {
+                const timeStr = l.time.toLocaleTimeString([], { hour:'2-digit', minute:'2-digit', second:'2-digit' });
+                const statusClass = l.read ? 'read' : 'unread';
+                html += `<div class="mail-item ${statusClass}" data-id="${l.id}">📨 ${l.text.substring(0, 50)}${l.text.length>50?'...':''}<div class="mail-time">${timeStr}</div></div>`;
+            }
+            mailList.innerHTML = html;
+            document.querySelectorAll('.mail-item').forEach(el => {
+                el.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const id = parseInt(el.dataset.id, 10);
+                    const letter = letters.find(l => l.id === id);
+                    if (letter) openLetter(letter);
+                });
+            });
+        }
+
+        function openLetter(letter) {
+            if (!letter.read) { letter.read = true; unreadCount--; saveLetters(); updateMailUI(); }
+            letterText.innerText = letter.text;
+            letterTime.innerText = letter.time.toLocaleString();
+            letterModal.classList.add('active');
+        }
+        function closeLetterModal() { letterModal.classList.remove('active'); }
+        function toggleMailModal() { mailModal.classList.toggle('active'); }
+        function saveLetters() {
+            localStorage.setItem('letters', JSON.stringify(letters.map(l => ({ id: l.id, text: l.text, time: l.time.getTime(), read: l.read }))));
+            localStorage.setItem('nextLetterId', nextLetterId);
+            localStorage.setItem('unreadCount', unreadCount);
+        }
+        function loadLetters() {
+            const saved = localStorage.getItem('letters');
+            if (saved) {
+                try {
+                    const parsed = JSON.parse(saved);
+                    letters = parsed.map(p => ({ id: p.id, text: p.text, time: new Date(p.time), read: p.read }));
+                    nextLetterId = parseInt(localStorage.getItem('nextLetterId')) || (letters.length ? Math.max(...letters.map(l=>l.id))+1 : 1);
+                    unreadCount = parseInt(localStorage.getItem('unreadCount')) || 0;
+                } catch(e) {}
+            } else { letters=[]; nextLetterId=1; unreadCount=0; }
+            updateMailUI();
+        }
+
+        // --- Сохранение / загрузка ---
+        function updateUI() {
+            counterSpan.innerText = clickCount;
+            coinsSpan.innerText = coins;
+            rublesSpan.innerText = rubles.toFixed(2);
+            userNameDisplay.innerText = userName;
+            manualClicksSpan.innerText = manualClicks;
+            autoClicksSpan.innerText = autoClicks;
+            totalClicksSpan.innerText = totalClicks;
+            updateEnergyUI();
+            renderAchievements();
+            updateUpgradeUI();
+            updateBonusUI();
+            updateBonusIndicator();
+        }
+
+        function saveGame() {
+            localStorage.setItem('clickCount', clickCount);
+            localStorage.setItem('totalClicks', totalClicks);
+            localStorage.setItem('manualClicks', manualClicks);
+            localStorage.setItem('autoClicks', autoClicks);
+            localStorage.setItem('coinsAmount', coins);
+            localStorage.setItem('rublesAmount', rubles);
+            localStorage.setItem('userName', userName);
+            localStorage.setItem('autoClickerActive', autoClickerActive);
+            localStorage.setItem('currentEnergy', currentEnergy);
+            localStorage.setItem('infiniteEnergyUntil', infiniteEnergyUntil);
+            localStorage.setItem('manualClickMult', manualClickMult);
+            localStorage.setItem('autoClickMult', autoClickMult);
+            localStorage.setItem('manualUpgradeLevel', manualUpgradeLevel);
+            localStorage.setItem('autoUpgradeLevel', autoUpgradeLevel);
+            localStorage.setItem('manualUpgradeCost', manualUpgradeCost);
+            localStorage.setItem('autoUpgradeCost', autoUpgradeCost);
+            localStorage.setItem('achievements', JSON.stringify(achievementsList.map(a => ({ id: a.id, completed: a.completed }))));
+            localStorage.setItem('lastDailyBonus', lastDailyBonus);
+            localStorage.setItem('telegramBonusClaimed', telegramBonusClaimed);
+            saveQuizState();
+            saveLetters();
+        }
+
+        function loadGame() {
+            clickCount = parseInt(localStorage.getItem('clickCount')) || 0;
+            totalClicks = parseInt(localStorage.getItem('totalClicks')) || 0;
+            manualClicks = parseInt(localStorage.getItem('manualClicks')) || 0;
+            autoClicks = parseInt(localStorage.getItem('autoClicks')) || 0;
+            // Миграция для старых сохранений: если totalClicks не было, вычисляем как manualClicks+autoClicks
+            if (!localStorage.getItem('totalClicks') && (manualClicks || autoClicks)) {
+                totalClicks = manualClicks + autoClicks;
+            } else if (!localStorage.getItem('totalClicks') && clickCount > 0) {
+                totalClicks = clickCount;
+            }
+            coins = parseInt(localStorage.getItem('coinsAmount')) || 0;
+            rubles = parseFloat(localStorage.getItem('rublesAmount')) || 0;
+            userName = localStorage.getItem('userName') || 'Гость';
+            autoClickerActive = localStorage.getItem('autoClickerActive') === 'true';
+            currentEnergy = parseFloat(localStorage.getItem('currentEnergy'));
+            if (isNaN(currentEnergy)) currentEnergy = MAX_ENERGY;
+            if (currentEnergy > MAX_ENERGY) currentEnergy = MAX_ENERGY;
+            infiniteEnergyUntil = parseInt(localStorage.getItem('infiniteEnergyUntil')) || 0;
+            manualClickMult = parseFloat(localStorage.getItem('manualClickMult')) || 1;
+            autoClickMult = parseFloat(localStorage.getItem('autoClickMult')) || 1;
+            manualUpgradeLevel = parseInt(localStorage.getItem('manualUpgradeLevel')) || 0;
+            autoUpgradeLevel = parseInt(localStorage.getItem('autoUpgradeLevel')) || 0;
+            manualUpgradeCost = parseInt(localStorage.getItem('manualUpgradeCost')) || 10;
+            autoUpgradeCost = parseInt(localStorage.getItem('autoUpgradeCost')) || 50;
+            lastDailyBonus = parseInt(localStorage.getItem('lastDailyBonus')) || 0;
+            telegramBonusClaimed = localStorage.getItem('telegramBonusClaimed') === 'true';
+            if (telegramBonusClaimed) telegramBonusStatus.innerText = "Активирован ✅";
+            const savedAchievements = localStorage.getItem('achievements');
+            if (savedAchievements) {
+                try {
+                    const saved = JSON.parse(savedAchievements);
+                    for (let s of saved) {
+                        const ach = achievementsList.find(a => a.id === s.id);
+                        if (ach) ach.completed = s.completed;
+                    }
+                } catch(e) {}
+            }
+            loadQuizState();
+            loadLetters();
+            updateUI();
+            checkAchievements();
+        }
+
+        // --- Табы и инициализация ---
+        function initTabs() {
+            document.querySelectorAll('.tab-btn').forEach(btn=>{
+                btn.addEventListener('click',()=>{
+                    const tabId=btn.dataset.tab;
+                    document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+                    btn.classList.add('active');
+                    document.querySelectorAll('.tab-content').forEach(c=>c.classList.remove('active-tab'));
+                    document.getElementById(tabId).classList.add('active-tab');
+                });
+            });
+        }
+
+        function bindEvents() {
+            clickImage.addEventListener('click', manualClick);
+            clickImage.addEventListener('touchstart', manualClick, { passive: false });
+            saveNameBtn.addEventListener('click', changeUserName);
+            newNameInput.addEventListener('keypress', e=>{ if(e.key==='Enter') changeUserName(); });
+            autoToggleBtn.addEventListener('click', toggleAutoClicker);
+            exchangeCustomBtn.addEventListener('click', handleExchange);
+            shopCard.addEventListener('click', openModal);
+            closeModalBtn.addEventListener('click', closeModal);
+            restoreEnergyBtn.addEventListener('click', buyRestore);
+            unlimited1hBtn.addEventListener('click', ()=>buyUnlimited(1));
+            unlimited24hBtn.addEventListener('click', ()=>buyUnlimited(24));
+            upgradeShopCard.addEventListener('click', openUpgradeModal);
+            closeUpgradeModalBtn.addEventListener('click', closeUpgradeModal);
+            buyClickUpgradeBtn.addEventListener('click', buyManualClickUpgrade);
+            buyAutoUpgradeBtn.addEventListener('click', buyAutoClickUpgrade);
+            mailIcon.addEventListener('click', toggleMailModal);
+            letterCloseBtn.addEventListener('click', closeLetterModal);
+            claimBonusBtn.addEventListener('click', claimDailyBonus);
+            resetProgressBtn.addEventListener('click', resetAllProgress);
+            coinsToRubBtn.addEventListener('click', coinsToRubles);
+            quizCard.addEventListener('click', openQuizModal);
+            submitQuizBtn.addEventListener('click', submitQuiz);
+            closeQuizModalBtn.addEventListener('click', closeQuizModal);
+            checkTelegramBtn.addEventListener('click', checkTelegramBonus);
+            window.addEventListener('click', (e)=>{ if(e.target===modal) closeModal(); if(e.target===letterModal) closeLetterModal(); if(e.target===upgradeModal) closeUpgradeModal(); if(e.target===quizModal) closeQuizModal(); if(mailModal.classList.contains('active') && !mailModal.contains(e.target) && e.target!==mailIcon) mailModal.classList.remove('active'); });
+        }
+
+        function init() {
+            loadGame();
+            initTabs();
+            bindEvents();
+            startRegen();
+            updateAutoUiState();
+            renderAchievements();
+            updateUpgradeUI();
+            updateBonusUI();
+            updateBonusIndicator();
+            updateQuizUIStatus();
+            // Дополнительно проверим бесконечную энергию при старте
+            if (infiniteEnergyUntil > 0 && Date.now() > infiniteEnergyUntil) {
+                infiniteEnergyUntil = 0;
+                addLetter("Бесконечная энергия закончилась (при загрузке)");
+                updateUI();
+            }
+        }
+        init();
+    })();
+</script>
+</body>
+</html>
